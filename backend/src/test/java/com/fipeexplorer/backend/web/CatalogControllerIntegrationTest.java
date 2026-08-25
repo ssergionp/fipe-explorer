@@ -1,5 +1,7 @@
 package com.fipeexplorer.backend.web;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fipeexplorer.backend.domain.Brand;
 import com.fipeexplorer.backend.repository.BrandRepository;
 import org.junit.jupiter.api.Tag;
@@ -8,7 +10,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.Comparator;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
@@ -29,6 +36,9 @@ class CatalogControllerIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Autowired
     private BrandRepository brandRepository;
@@ -119,5 +129,43 @@ class CatalogControllerIntegrationTest {
         mockMvc.perform(get("/api/v1/brands/{brandId}/models", bmwCar.getId()).param("type", "MOTORCYCLE"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", empty()));
+    }
+
+    @Test
+    void fuelTypesReturnsAllKnownFuels() throws Exception {
+        mockMvc.perform(get("/api/v1/fuel-types"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].name", containsInAnyOrder(
+                        "Diesel", "Elétrico", "Flex", "Gasolina", "Gás Natural", "Híbrido", "Álcool")));
+    }
+
+    @Test
+    void yearsForCarIncludesKnownYearAndZeroKmMarker() throws Exception {
+        // Acura Integra GS 1.8 (CAR) tem entrada para 1991; Agrale MARRUÁ (CAR) usa o código
+        // "32000", convenção da FIPE para zero km.
+        mockMvc.perform(get("/api/v1/vehicle-types/{type}/years", "CAR"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasItem(1991)))
+                .andExpect(jsonPath("$", hasItem(32000)));
+    }
+
+    @Test
+    void yearsAreDistinctAndOrderedDescending() throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/v1/vehicle-types/{type}/years", "CAR"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        List<Integer> years = objectMapper.readValue(
+                result.getResponse().getContentAsString(), new TypeReference<List<Integer>>() {
+                });
+
+        assertThat(years).hasSameSizeAs(years.stream().distinct().toList());
+        assertThat(years).isSortedAccordingTo(Comparator.reverseOrder());
+    }
+
+    @Test
+    void yearsWithInvalidVehicleTypeReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/v1/vehicle-types/{type}/years", "BOAT"))
+                .andExpect(status().isBadRequest());
     }
 }
