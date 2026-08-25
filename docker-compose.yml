@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: fipe-explorer-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: fipe_explorer
+      POSTGRES_USER: fipe
+      POSTGRES_PASSWORD: fipe
+    ports:
+      - "5433:5432"
+    volumes:
+      - fipe-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fipe -d fipe_explorer"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  fipe-postgres-data:

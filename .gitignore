@@ -1,0 +1,21 @@
+# Build
+target/
+*.class
+dist/
+node_modules/
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+
+# Config local (não compartilhar entre máquinas)
+.claude/settings.local.json
+
+# Ambiente
+.env
+.env.local
+
+# SO
+.DS_Store
+Thumbs.db

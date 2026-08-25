@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: fipe-explorer-backend
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/fipe_explorer}
+    username: ${DB_USER:fipe}
+    password: ${DB_PASSWORD:fipe}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 500
+        order_inserts: true
+  flyway:
+    enabled: true
+
+fipe:
+  import:
+    csv-path: ${FIPE_CSV_PATH:../data/tabela-fipe-336.csv}
+
+server:
+  port: ${SERVER_PORT:8080}
