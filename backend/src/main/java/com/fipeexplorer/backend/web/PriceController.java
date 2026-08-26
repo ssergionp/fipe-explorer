@@ -43,6 +43,7 @@ public class PriceController {
                 vehicleModel.getId(),
                 vehicleModel.getBrand().getName(),
                 vehicleModel.getName(),
+                vehicleModel.getVehicleType(),
                 vehicleModel.getFipePriceCode(),
                 prices);
     }

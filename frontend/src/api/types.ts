@@ -50,8 +50,24 @@ export interface ModelPriceHistory {
   modelId: number
   brand: string
   model: string
+  vehicleType: VehicleType
   fipeCode: string
   prices: PricePoint[]
+}
+
+export type CalendarHistoryStatus = 'AVAILABLE' | 'NOT_FOUND' | 'RATE_LIMITED' | 'UNAVAILABLE'
+
+export interface CalendarHistoryPoint {
+  month: string
+  referenceCode: string
+  price: number
+}
+
+export interface CalendarHistoryResponse {
+  status: CalendarHistoryStatus
+  reason: string | null
+  cached: boolean
+  months: CalendarHistoryPoint[]
 }
 
 export interface StatsSummary {

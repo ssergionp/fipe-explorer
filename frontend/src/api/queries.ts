@@ -2,6 +2,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { apiGet } from './client'
 import type {
   Brand,
+  CalendarHistoryResponse,
   FuelDistributionEntry,
   FuelType,
   ModelPriceHistory,
@@ -66,6 +67,20 @@ export function useModelPriceHistory(modelId: number | undefined) {
     queryKey: ['model-price-history', modelId],
     queryFn: () => apiGet<ModelPriceHistory>(`/models/${modelId}/prices`),
     enabled: modelId !== undefined,
+    retry: false,
+  })
+}
+
+/**
+ * Só é chamado quando montado (a tela de Detalhe renderiza o painel sob demanda, ao clicar em
+ * "Ver histórico real de preço" numa linha) — a API pública da FIPE tem cota diária baixa
+ * (500 requisições sem token), então isso nunca deve disparar automaticamente para todas as
+ * linhas da tabela.
+ */
+export function useCalendarHistory(type: VehicleType, fipeCode: string, yearCode: string) {
+  return useQuery({
+    queryKey: ['calendar-history', type, fipeCode, yearCode],
+    queryFn: () => apiGet<CalendarHistoryResponse>('/vehicles/calendar-history', { type, fipeCode, yearCode }),
     retry: false,
   })
 }

@@ -1,5 +1,8 @@
+import { Fragment, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useModelPriceHistory } from '../api/queries'
+import { useCalendarHistory, useModelPriceHistory } from '../api/queries'
+import type { VehicleType } from '../api/types'
+import { CalendarHistoryChart } from '../components/CalendarHistoryChart'
 import { DepreciationChart } from '../components/DepreciationChart'
 import { extractYear, formatYearLabel } from '../lib/year'
 
@@ -39,7 +42,8 @@ export function VehicleDetailPage() {
 }
 
 function VehicleDetail({ data }: { data: NonNullable<ReturnType<typeof useModelPriceHistory>['data']> }) {
-  const { brand, model, fipeCode, prices } = data
+  const { brand, model, vehicleType, fipeCode, prices } = data
+  const [expandedYearCode, setExpandedYearCode] = useState<string | null>(null)
 
   if (prices.length === 0) {
     return (
@@ -84,19 +88,89 @@ function VehicleDetail({ data }: { data: NonNullable<ReturnType<typeof useModelP
               <th className="px-4 py-2 font-medium">Ano</th>
               <th className="px-4 py-2 font-medium">Combustível</th>
               <th className="px-4 py-2 text-right font-medium">Preço</th>
+              <th className="px-4 py-2 text-right font-medium">Histórico real</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {sortedPrices.map((point) => (
-              <tr key={point.yearCode}>
-                <td className="px-4 py-2">{formatYearLabel(extractYear(point.yearCode))}</td>
-                <td className="px-4 py-2">{point.fuel}</td>
-                <td className="px-4 py-2 text-right">{currencyFormatter.format(point.price)}</td>
-              </tr>
-            ))}
+            {sortedPrices.map((point) => {
+              const isExpanded = expandedYearCode === point.yearCode
+              return (
+                <Fragment key={point.yearCode}>
+                  <tr>
+                    <td className="px-4 py-2">{formatYearLabel(extractYear(point.yearCode))}</td>
+                    <td className="px-4 py-2">{point.fuel}</td>
+                    <td className="px-4 py-2 text-right">{currencyFormatter.format(point.price)}</td>
+                    <td className="px-4 py-2 text-right">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedYearCode(isExpanded ? null : point.yearCode)}
+                        className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                      >
+                        {isExpanded ? 'Ocultar' : 'Ver histórico real de preço'}
+                      </button>
+                    </td>
+                  </tr>
+                  {isExpanded && (
+                    <tr>
+                      <td colSpan={4} className="bg-slate-50 px-4 py-4">
+                        <CalendarHistoryPanel
+                          vehicleType={vehicleType}
+                          fipeCode={fipeCode}
+                          yearCode={point.yearCode}
+                          fuel={point.fuel}
+                        />
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              )
+            })}
           </tbody>
         </table>
       </div>
+    </div>
+  )
+}
+
+function CalendarHistoryPanel({
+  vehicleType,
+  fipeCode,
+  yearCode,
+  fuel,
+}: {
+  vehicleType: VehicleType
+  fipeCode: string
+  yearCode: string
+  fuel: string
+}) {
+  const query = useCalendarHistory(vehicleType, fipeCode, yearCode)
+
+  if (query.isPending) {
+    return <p className="text-sm text-slate-500">Carregando histórico real de preço...</p>
+  }
+
+  if (query.isError) {
+    return <p className="text-sm text-red-600">Erro ao carregar histórico: {query.error.message}</p>
+  }
+
+  const { status, reason, months, cached } = query.data
+
+  if (status !== 'AVAILABLE') {
+    return (
+      <p className="text-sm text-amber-700">
+        Histórico real indisponível no momento{reason ? `: ${reason}` : '.'}
+      </p>
+    )
+  }
+
+  if (months.length === 0) {
+    return <p className="text-sm text-slate-500">Sem histórico mensal disponível para esta combinação.</p>
+  }
+
+  return (
+    <div>
+      <CalendarHistoryChart months={months} fuel={fuel} />
+      {cached && <p className="mt-1 text-xs text-slate-400">Resultado em cache (atualizado nas últimas 24h).</p>}
     </div>
   )
 }

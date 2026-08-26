@@ -6,6 +6,7 @@ public record ModelPriceHistoryResponse(
         Long modelId,
         String brand,
         String model,
+        String vehicleType,
         String fipeCode,
         List<PricePointDto> prices
 ) {

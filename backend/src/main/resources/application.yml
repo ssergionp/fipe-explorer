@@ -22,6 +22,10 @@ fipe:
     csv-path: ${FIPE_CSV_PATH:../data/tabela-fipe-336.csv}
   cors:
     allowed-origins: ${FRONTEND_ORIGIN:http://localhost:5173}
+  external-api:
+    base-url: ${FIPE_EXTERNAL_API_BASE_URL:https://fipe.parallelum.com.br/api/v2}
+    token: ${FIPE_EXTERNAL_API_TOKEN:}
+    cache-ttl-hours: ${FIPE_EXTERNAL_API_CACHE_TTL_HOURS:24}
 
 server:
   port: ${SERVER_PORT:8080}
