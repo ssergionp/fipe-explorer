@@ -13,9 +13,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
- * Fase 1 da autenticação: infraestrutura pra features futuras (favoritos, alertas) que vão
- * precisar saber "de quem" é o dado — NENHUMA tela/endpoint existente fica protegido aqui.
- * O único endpoint que exige autenticação hoje é GET /api/v1/auth/me.
+ * Endpoints protegidos: /api/v1/auth/me e tudo sob /api/v1/me/** (favoritos, estimativas salvas —
+ * primeiras features que precisam saber "de quem" é o dado). Todo o resto (busca, detalhe,
+ * calculadora pública, histórico, etc.) continua público, exatamente como antes da autenticação.
  */
 @Configuration
 @EnableWebSecurity
@@ -46,7 +46,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login",
                                 "/api/v1/auth/refresh", "/api/v1/auth/logout").permitAll()
                         .requestMatchers("/api/v1/auth/me").authenticated()
-                        .anyRequest().permitAll() // nada mais é protegido nesta fase
+                        .requestMatchers("/api/v1/me/**").authenticated()
+                        .anyRequest().permitAll() // tudo mais (busca, detalhe, calculadora etc.) continua público
                 )
                 .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(authenticationEntryPoint))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

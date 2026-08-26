@@ -1,15 +1,18 @@
 import { Fragment, useState, type FormEvent } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   useCalendarHistory,
   useModelPriceHistory,
   usePriceEstimate,
+  useSavePriceEstimate,
   useVehicleConditions,
   useVehicleExtras,
 } from '../api/queries'
 import type { PriceEstimateResponse, VehicleCondition, VehicleType } from '../api/types'
+import { useAuth } from '../auth/AuthContext'
 import { CalendarHistoryChart } from '../components/CalendarHistoryChart'
 import { DepreciationChart } from '../components/DepreciationChart'
+import { FavoriteButton } from '../components/FavoriteButton'
 import { extractYear, formatYearLabel } from '../lib/year'
 
 const currencyFormatter = new Intl.NumberFormat('pt-BR', {
@@ -116,7 +119,8 @@ function VehicleDetail({ data }: { data: NonNullable<ReturnType<typeof useModelP
                     <td className="px-4 py-2">{point.fuel}</td>
                     <td className="px-4 py-2 text-right">{currencyFormatter.format(point.price)}</td>
                     <td className="px-4 py-2 text-right">
-                      <div className="flex justify-end gap-2">
+                      <div className="flex items-center justify-end gap-2">
+                        <FavoriteButton priceEntryId={point.priceEntryId} />
                         <button
                           type="button"
                           onClick={() => setExpandedHistoryYearCode(isHistoryExpanded ? null : point.yearCode)}
@@ -288,18 +292,66 @@ function PriceEstimateForm({ priceEntryId }: { priceEntryId: number }) {
 
       {mutation.isError && <p className="text-sm text-red-600">Erro ao calcular: {mutation.error.message}</p>}
 
-      {mutation.isSuccess && <PriceEstimateResult result={mutation.data} />}
+      {mutation.isSuccess && (
+        <PriceEstimateResult
+          priceEntryId={priceEntryId}
+          km={Number(km)}
+          condition={condition as VehicleCondition}
+          extras={selectedExtras}
+          result={mutation.data}
+        />
+      )}
     </div>
   )
 }
 
-function PriceEstimateResult({ result }: { result: PriceEstimateResponse }) {
+function PriceEstimateResult({
+  priceEntryId,
+  km,
+  condition,
+  extras,
+  result,
+}: {
+  priceEntryId: number
+  km: number
+  condition: VehicleCondition
+  extras: string[]
+  result: PriceEstimateResponse
+}) {
+  const { isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+  const saveMutation = useSavePriceEstimate()
+
+  function handleSave() {
+    if (!isAuthenticated) {
+      navigate('/login')
+      return
+    }
+    saveMutation.mutate({ priceEntryId, km, condition, extras })
+  }
+
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4">
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <SummaryChip label="Preço FIPE (base)" value={currencyFormatter.format(result.basePrice)} />
         <SummaryChip label="Valor estimado" value={currencyFormatter.format(result.adjustedPrice)} />
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saveMutation.isPending || saveMutation.isSuccess}
+          className="ml-auto rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+        >
+          {saveMutation.isSuccess
+            ? 'Estimativa salva ✓'
+            : saveMutation.isPending
+              ? 'Salvando...'
+              : 'Salvar esta estimativa'}
+        </button>
       </div>
+
+      {saveMutation.isError && (
+        <p className="mt-2 text-sm text-red-600">Erro ao salvar: {saveMutation.error.message}</p>
+      )}
 
       <ul className="mt-3 space-y-1 text-sm">
         {result.components.map((component) => {

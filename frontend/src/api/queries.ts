@@ -1,5 +1,6 @@
-import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
-import { apiGet, apiPost } from './client'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useAuth } from '../auth/AuthContext'
+import { apiDelete, apiGet, apiPost } from './client'
 import type {
   Brand,
   CalendarHistoryResponse,
@@ -10,6 +11,8 @@ import type {
   PageResponse,
   PriceEstimateRequest,
   PriceEstimateResponse,
+  SavedPriceEstimate,
+  SavePriceEstimateRequest,
   SortBy,
   SortDir,
   StatsSummary,
@@ -106,6 +109,57 @@ export function usePriceEstimate(priceEntryId: number) {
   return useMutation({
     mutationFn: (request: PriceEstimateRequest) =>
       apiPost<PriceEstimateResponse>(`/vehicles/${priceEntryId}/price-estimate`, request),
+  })
+}
+
+export function useFavorites() {
+  const { isAuthenticated } = useAuth()
+  return useQuery({
+    queryKey: ['favorites'],
+    queryFn: () => apiGet<VehicleSearchResult[]>('/me/favorites'),
+    enabled: isAuthenticated,
+  })
+}
+
+export function useAddFavorite() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (priceEntryId: number) => apiPost<VehicleSearchResult>('/me/favorites', { priceEntryId }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['favorites'] }),
+  })
+}
+
+export function useRemoveFavorite() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (priceEntryId: number) => apiDelete(`/me/favorites/${priceEntryId}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['favorites'] }),
+  })
+}
+
+export function useSavedPriceEstimates() {
+  const { isAuthenticated } = useAuth()
+  return useQuery({
+    queryKey: ['saved-price-estimates'],
+    queryFn: () => apiGet<SavedPriceEstimate[]>('/me/price-estimates'),
+    enabled: isAuthenticated,
+  })
+}
+
+export function useSavePriceEstimate() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (request: SavePriceEstimateRequest) =>
+      apiPost<SavedPriceEstimate>('/me/price-estimates', request),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['saved-price-estimates'] }),
+  })
+}
+
+export function useDeleteSavedPriceEstimate() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => apiDelete(`/me/price-estimates/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['saved-price-estimates'] }),
   })
 }
 

@@ -69,7 +69,10 @@ async function request<T>(url: string | URL, init: RequestInit, isRetry = false)
   if (!response.ok) {
     throw new Error(`Erro ${response.status} ao chamar ${url}`)
   }
-  return response.json() as Promise<T>
+
+  // 204 No Content (DELETE) não tem corpo - response.json() lançaria em cima de string vazia.
+  const text = await response.text()
+  return (text ? JSON.parse(text) : undefined) as T
 }
 
 export async function apiGet<T>(path: string, params: QueryParams = {}): Promise<T> {
@@ -88,4 +91,8 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
+}
+
+export async function apiDelete<T = void>(path: string): Promise<T> {
+  return request<T>(`${API_BASE_URL}${path}`, { method: 'DELETE' })
 }

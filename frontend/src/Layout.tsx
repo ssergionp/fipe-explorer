@@ -36,6 +36,9 @@ export function Layout() {
           <div className="ml-auto flex items-center gap-3">
             {isAuthenticated ? (
               <>
+                <NavLink to="/meus-veiculos" className={navLinkClass}>
+                  Meus veículos
+                </NavLink>
                 {currentUserQuery.data && (
                   <span className="text-sm text-slate-600">{currentUserQuery.data.email}</span>
                 )}

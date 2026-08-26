@@ -77,7 +77,7 @@ public class VehicleSearchController {
         PageRequest pageRequest = PageRequest.of(pageNumber, pageSize, sort);
 
         Page<VehicleSearchResultDto> results = priceEntryRepository.findAll(spec, pageRequest)
-                .map(VehicleSearchController::toDto);
+                .map(VehicleSearchResultDto::from);
 
         return PageResponseDto.from(results);
     }
@@ -100,7 +100,7 @@ public class VehicleSearchController {
         return ids.stream()
                 .map(entriesById::get)
                 .filter(Objects::nonNull)
-                .map(VehicleSearchController::toDto)
+                .map(VehicleSearchResultDto::from)
                 .toList();
     }
 
@@ -109,22 +109,5 @@ public class VehicleSearchController {
             case PRICE -> "price";
             case MODEL_NAME -> "vehicleModel.name";
         };
-    }
-
-    private static VehicleSearchResultDto toDto(PriceEntry entry) {
-        return new VehicleSearchResultDto(
-                entry.getId(),
-                entry.getVehicleModel().getId(),
-                entry.getVehicleModel().getBrand().getName(),
-                entry.getVehicleModel().getName(),
-                yearFromYearCode(entry.getYearCode()),
-                entry.getFuelType().getName(),
-                entry.getPrice(),
-                entry.getVehicleModel().getFipePriceCode());
-    }
-
-    private static String yearFromYearCode(String yearCode) {
-        int dashIndex = yearCode.indexOf('-');
-        return dashIndex >= 0 ? yearCode.substring(0, dashIndex) : yearCode;
     }
 }

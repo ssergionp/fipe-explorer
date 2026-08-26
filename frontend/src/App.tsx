@@ -3,6 +3,7 @@ import { Layout } from './Layout'
 import { ComparePage } from './pages/ComparePage'
 import { InsightsPage } from './pages/InsightsPage'
 import { LoginPage } from './pages/LoginPage'
+import { MyVehiclesPage } from './pages/MyVehiclesPage'
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { SearchPage } from './pages/SearchPage'
@@ -19,6 +20,7 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/cadastro" element={<RegisterPage />} />
         <Route path="/privacidade" element={<PrivacyPolicyPage />} />
+        <Route path="/meus-veiculos" element={<MyVehiclesPage />} />
       </Route>
     </Routes>
   )

@@ -125,3 +125,22 @@ export interface PriceEstimateResponse {
   adjustedPrice: number
   components: PriceAdjustmentComponent[]
 }
+
+export interface SavePriceEstimateRequest {
+  priceEntryId: number
+  km: number
+  condition: VehicleCondition
+  extras: string[]
+}
+
+export interface SavedPriceEstimate {
+  id: number
+  vehicle: VehicleSearchResult
+  km: number
+  condition: VehicleCondition
+  extras: string[]
+  basePrice: number
+  adjustedPrice: number
+  components: PriceAdjustmentComponent[]
+  createdAt: string
+}

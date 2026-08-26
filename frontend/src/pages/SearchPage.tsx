@@ -11,6 +11,7 @@ import {
   type VehicleSearchFilters,
 } from '../api/queries'
 import type { SortBy, SortDir, VehicleType } from '../api/types'
+import { FavoriteButton } from '../components/FavoriteButton'
 
 const PAGE_SIZE = 20
 const MAX_COMPARE_ITEMS = 4
@@ -341,6 +342,9 @@ function ResultsSection({
               <th className="px-4 py-2 font-medium">
                 <span className="sr-only">Comparar</span>
               </th>
+              <th className="px-4 py-2 font-medium">
+                <span className="sr-only">Favoritar</span>
+              </th>
               <th className="px-4 py-2 font-medium">Marca</th>
               <th className="px-4 py-2 font-medium">Modelo</th>
               <th className="px-4 py-2 font-medium">Ano</th>
@@ -364,6 +368,9 @@ function ResultsSection({
                       disabled={isDisabled}
                       onChange={() => onToggleSelected(item.id)}
                     />
+                  </td>
+                  <td className="px-4 py-2">
+                    <FavoriteButton priceEntryId={item.id} />
                   </td>
                   <td className="px-4 py-2">{item.brand}</td>
                   <td className="px-4 py-2">
