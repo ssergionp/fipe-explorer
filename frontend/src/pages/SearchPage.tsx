@@ -123,6 +123,15 @@ export function SearchPage() {
     navigate(`/compare?ids=${selectedIds.join(',')}`)
   }
 
+  const filterErrorLabels: [boolean, string][] = [
+    [vehicleTypesQuery.isError, 'tipos de veículo'],
+    [brandsQuery.isError, 'marcas'],
+    [modelsQuery.isError, 'modelos'],
+    [yearsQuery.isError, 'anos'],
+    [fuelTypesQuery.isError, 'combustíveis'],
+  ]
+  const failedFilters = filterErrorLabels.filter(([hasError]) => hasError).map(([, label]) => label)
+
   return (
     <div className={`space-y-6 ${selectedIds.length > 0 ? 'pb-16' : ''}`}>
       <div>
@@ -132,6 +141,13 @@ export function SearchPage() {
           opcionais e combináveis entre si.
         </p>
       </div>
+
+      {failedFilters.length > 0 && (
+        <p className="text-sm text-red-600" role="alert">
+          Não foi possível carregar as opções de: {failedFilters.join(', ')}. Verifique sua
+          conexão e recarregue a página.
+        </p>
+      )}
 
       <div className="grid grid-cols-2 gap-4 rounded-lg border border-slate-200 bg-white p-4 sm:grid-cols-3 lg:grid-cols-6">
         <Field label="Tipo">
@@ -343,6 +359,7 @@ function ResultsSection({
                     <input
                       type="checkbox"
                       aria-label={`Adicionar ${item.brand} ${item.model} (${item.fuel}, ${item.year}) à comparação`}
+                      title={isDisabled ? 'Limite de 4 veículos na comparação atingido' : undefined}
                       checked={isSelected}
                       disabled={isDisabled}
                       onChange={() => onToggleSelected(item.id)}
@@ -350,7 +367,7 @@ function ResultsSection({
                   </td>
                   <td className="px-4 py-2">{item.brand}</td>
                   <td className="px-4 py-2">
-                    <Link to={`/vehicles/${item.modelId}`} className="text-blue-600 hover:underline">
+                    <Link to={`/vehicles/${item.modelId}`} className="text-blue-600 underline">
                       {item.model}
                     </Link>
                   </td>

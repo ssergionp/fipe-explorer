@@ -17,7 +17,7 @@ export function VehicleDetailPage() {
 
   return (
     <div className="space-y-6">
-      <Link to="/" className="text-sm text-blue-600 hover:underline">
+      <Link to="/" className="text-sm text-blue-600 underline">
         ← Voltar para a busca
       </Link>
 

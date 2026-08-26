@@ -55,7 +55,7 @@ export function ComparePage() {
 
   return (
     <div className="space-y-6">
-      <Link to="/" className="text-sm text-blue-600 hover:underline">
+      <Link to="/" className="text-sm text-blue-600 underline">
         ← Voltar para a busca
       </Link>
 
@@ -76,7 +76,7 @@ function EmptyState({ message }: { message: string }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-6 text-center">
       <p className="text-sm text-slate-600">{message}</p>
-      <Link to="/" className="mt-3 inline-block text-sm text-blue-600 hover:underline">
+      <Link to="/" className="mt-3 inline-block text-sm text-blue-600 underline">
         Ir para a busca
       </Link>
     </div>
@@ -162,7 +162,7 @@ function CompareCard({
       </div>
 
       <h2 className="mt-2 text-lg font-semibold text-slate-900">
-        <Link to={`/vehicles/${item.modelId}`} className="hover:underline">
+        <Link to={`/vehicles/${item.modelId}`} className="underline">
           {item.brand} {item.model}
         </Link>
       </h2>
