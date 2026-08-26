@@ -1,5 +1,14 @@
 export type VehicleType = 'CAR' | 'MOTORCYCLE' | 'TRUCK'
 
+export interface AuthResponse {
+  token: string
+  refreshToken: string
+}
+
+export interface CurrentUser {
+  email: string
+}
+
 export interface Brand {
   id: number
   name: string

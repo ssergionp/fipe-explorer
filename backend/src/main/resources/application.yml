@@ -26,6 +26,11 @@ fipe:
     base-url: ${FIPE_EXTERNAL_API_BASE_URL:https://fipe.parallelum.com.br/api/v2}
     token: ${FIPE_EXTERNAL_API_TOKEN:}
     cache-ttl-hours: ${FIPE_EXTERNAL_API_CACHE_TTL_HOURS:24}
+  jwt:
+    # Default só serve para desenvolvimento local — em produção, SEMPRE sobrescrever via JWT_SECRET.
+    secret: ${JWT_SECRET:xuuMCZakUvLTz71IR+pD0X4wKOaukd5vZt9Ar21FIWhXv+ZP9X7OUcHWxh92XtBteDHS1mgg7T2gUhxQ3vcwZQ==}
+    access-token-expiration-minutes: ${JWT_ACCESS_TOKEN_EXPIRATION_MINUTES:15}
+    refresh-token-expiration-days: ${JWT_REFRESH_TOKEN_EXPIRATION_DAYS:7}
 
 server:
   port: ${SERVER_PORT:8080}
