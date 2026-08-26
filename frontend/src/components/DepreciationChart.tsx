@@ -10,29 +10,8 @@ import {
   type TooltipContentProps,
 } from 'recharts'
 import type { PricePoint } from '../api/types'
+import { fuelColor, orderFuels } from '../lib/fuelColors'
 import { extractYear, formatYearLabel } from '../lib/year'
-
-/**
- * Ordem fixa por combustível (nunca por posição/rank) — paleta categórica
- * validada da skill dataviz. Um combustível sempre tem a mesma cor entre
- * modelos diferentes; um combustível fora dessa lista cai no fallback.
- */
-const FUEL_ORDER = ['Gasolina', 'Diesel', 'Flex', 'Álcool', 'Elétrico', 'Híbrido', 'Gás Natural']
-
-const FUEL_COLOR_VARS: Record<string, string> = {
-  Gasolina: 'var(--fuel-gasolina)',
-  Diesel: 'var(--fuel-diesel)',
-  Flex: 'var(--fuel-flex)',
-  Álcool: 'var(--fuel-alcool)',
-  Elétrico: 'var(--fuel-eletrico)',
-  Híbrido: 'var(--fuel-hibrido)',
-  'Gás Natural': 'var(--fuel-gas-natural)',
-}
-const FALLBACK_COLOR_VAR = 'var(--chart-text-muted)'
-
-function fuelColor(fuel: string) {
-  return FUEL_COLOR_VARS[fuel] ?? FALLBACK_COLOR_VAR
-}
 
 type ChartRow = { year: number; yearLabel: string } & Record<string, number | string>
 
@@ -49,14 +28,7 @@ function buildChartData(prices: PricePoint[]): { rows: ChartRow[]; fuels: string
   }
 
   const rows = [...rowsByYear.values()].sort((a, b) => a.year - b.year)
-  const fuels = FUEL_ORDER.filter((f) => fuelsSeen.has(f))
-  for (const f of fuelsSeen) {
-    if (!fuels.includes(f)) {
-      fuels.push(f)
-    }
-  }
-
-  return { rows, fuels }
+  return { rows, fuels: orderFuels(fuelsSeen) }
 }
 
 const currencyFormatter = new Intl.NumberFormat('pt-BR', {

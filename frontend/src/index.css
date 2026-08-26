@@ -18,6 +18,12 @@
   --fuel-eletrico: #e87ba4;
   --fuel-hibrido: #008300;
   --fuel-gas-natural: #4a3aa7;
+
+  /* Cor sequencial (magnitude, não identidade) pros rankings de preço médio por marca em
+     Insights — azul é o hue sequencial default da skill; laranja é o segundo hue sequencial
+     quando dois contextos aparecem juntos na tela (mais caras / mais baratas). */
+  --stat-bar-high: #2a78d6;
+  --stat-bar-low: #eb6834;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -35,6 +41,9 @@
     --fuel-eletrico: #d55181;
     --fuel-hibrido: #008300;
     --fuel-gas-natural: #9085e9;
+
+    --stat-bar-high: #3987e5;
+    --stat-bar-low: #d95926;
   }
 }
 

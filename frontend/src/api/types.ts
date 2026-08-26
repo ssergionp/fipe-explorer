@@ -53,3 +53,23 @@ export interface ModelPriceHistory {
   fipeCode: string
   prices: PricePoint[]
 }
+
+export interface StatsSummary {
+  totalPriceEntries: number
+  distinctModels: number
+  minPrice: number
+  avgPrice: number
+  maxPrice: number
+}
+
+export interface TopBrand {
+  brandId: number
+  brandName: string
+  avgPrice: number
+  modelCount: number
+}
+
+export interface FuelDistributionEntry {
+  fuel: string
+  count: number
+}

@@ -2,11 +2,14 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { apiGet } from './client'
 import type {
   Brand,
+  FuelDistributionEntry,
   FuelType,
   ModelPriceHistory,
   PageResponse,
   SortBy,
   SortDir,
+  StatsSummary,
+  TopBrand,
   VehicleModelSummary,
   VehicleSearchResult,
   VehicleType,
@@ -64,6 +67,30 @@ export function useModelPriceHistory(modelId: number | undefined) {
     queryFn: () => apiGet<ModelPriceHistory>(`/models/${modelId}/prices`),
     enabled: modelId !== undefined,
     retry: false,
+  })
+}
+
+export function useStatsSummary(type: VehicleType | undefined) {
+  return useQuery({
+    queryKey: ['stats-summary', type],
+    queryFn: () => apiGet<StatsSummary>('/stats/summary', { type }),
+    enabled: type !== undefined,
+  })
+}
+
+export function useTopBrands(type: VehicleType | undefined, order: 'asc' | 'desc', limit: number) {
+  return useQuery({
+    queryKey: ['stats-top-brands', type, order, limit],
+    queryFn: () => apiGet<TopBrand[]>('/stats/top-brands', { type, order, limit }),
+    enabled: type !== undefined,
+  })
+}
+
+export function useFuelDistribution(type: VehicleType | undefined) {
+  return useQuery({
+    queryKey: ['stats-fuel-distribution', type],
+    queryFn: () => apiGet<FuelDistributionEntry[]>('/stats/fuel-distribution', { type }),
+    enabled: type !== undefined,
   })
 }
 
