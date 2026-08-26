@@ -1,12 +1,15 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { apiGet } from './client'
+import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
+import { apiGet, apiPost } from './client'
 import type {
   Brand,
   CalendarHistoryResponse,
   FuelDistributionEntry,
   FuelType,
+  LabeledValue,
   ModelPriceHistory,
   PageResponse,
+  PriceEstimateRequest,
+  PriceEstimateResponse,
   SortBy,
   SortDir,
   StatsSummary,
@@ -82,6 +85,27 @@ export function useCalendarHistory(type: VehicleType, fipeCode: string, yearCode
     queryKey: ['calendar-history', type, fipeCode, yearCode],
     queryFn: () => apiGet<CalendarHistoryResponse>('/vehicles/calendar-history', { type, fipeCode, yearCode }),
     retry: false,
+  })
+}
+
+export function useVehicleConditions() {
+  return useQuery({
+    queryKey: ['vehicle-conditions'],
+    queryFn: () => apiGet<LabeledValue[]>('/vehicle-conditions'),
+  })
+}
+
+export function useVehicleExtras() {
+  return useQuery({
+    queryKey: ['vehicle-extras'],
+    queryFn: () => apiGet<LabeledValue[]>('/vehicle-extras'),
+  })
+}
+
+export function usePriceEstimate(priceEntryId: number) {
+  return useMutation({
+    mutationFn: (request: PriceEstimateRequest) =>
+      apiPost<PriceEstimateResponse>(`/vehicles/${priceEntryId}/price-estimate`, request),
   })
 }
 

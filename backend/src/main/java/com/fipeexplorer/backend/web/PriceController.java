@@ -50,6 +50,7 @@ public class PriceController {
 
     private static PricePointDto toDto(PriceEntry entry) {
         return new PricePointDto(
+                entry.getId(),
                 entry.getYearCode(),
                 entry.getYearValue(),
                 entry.getFuelType().getName(),

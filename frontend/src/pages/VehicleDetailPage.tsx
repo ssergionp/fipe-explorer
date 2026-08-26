@@ -1,7 +1,13 @@
-import { Fragment, useState } from 'react'
+import { Fragment, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useCalendarHistory, useModelPriceHistory } from '../api/queries'
-import type { VehicleType } from '../api/types'
+import {
+  useCalendarHistory,
+  useModelPriceHistory,
+  usePriceEstimate,
+  useVehicleConditions,
+  useVehicleExtras,
+} from '../api/queries'
+import type { PriceEstimateResponse, VehicleCondition, VehicleType } from '../api/types'
 import { CalendarHistoryChart } from '../components/CalendarHistoryChart'
 import { DepreciationChart } from '../components/DepreciationChart'
 import { extractYear, formatYearLabel } from '../lib/year'
@@ -9,6 +15,13 @@ import { extractYear, formatYearLabel } from '../lib/year'
 const currencyFormatter = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
   currency: 'BRL',
+})
+
+const percentFormatter = new Intl.NumberFormat('pt-BR', {
+  style: 'percent',
+  signDisplay: 'exceptZero',
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
 })
 
 export function VehicleDetailPage() {
@@ -43,7 +56,8 @@ export function VehicleDetailPage() {
 
 function VehicleDetail({ data }: { data: NonNullable<ReturnType<typeof useModelPriceHistory>['data']> }) {
   const { brand, model, vehicleType, fipeCode, prices } = data
-  const [expandedYearCode, setExpandedYearCode] = useState<string | null>(null)
+  const [expandedHistoryYearCode, setExpandedHistoryYearCode] = useState<string | null>(null)
+  const [expandedEstimatePriceEntryId, setExpandedEstimatePriceEntryId] = useState<number | null>(null)
 
   if (prices.length === 0) {
     return (
@@ -88,12 +102,13 @@ function VehicleDetail({ data }: { data: NonNullable<ReturnType<typeof useModelP
               <th className="px-4 py-2 font-medium">Ano</th>
               <th className="px-4 py-2 font-medium">Combustível</th>
               <th className="px-4 py-2 text-right font-medium">Preço</th>
-              <th className="px-4 py-2 text-right font-medium">Histórico real</th>
+              <th className="px-4 py-2 text-right font-medium">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {sortedPrices.map((point) => {
-              const isExpanded = expandedYearCode === point.yearCode
+              const isHistoryExpanded = expandedHistoryYearCode === point.yearCode
+              const isEstimateExpanded = expandedEstimatePriceEntryId === point.priceEntryId
               return (
                 <Fragment key={point.yearCode}>
                   <tr>
@@ -101,24 +116,38 @@ function VehicleDetail({ data }: { data: NonNullable<ReturnType<typeof useModelP
                     <td className="px-4 py-2">{point.fuel}</td>
                     <td className="px-4 py-2 text-right">{currencyFormatter.format(point.price)}</td>
                     <td className="px-4 py-2 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setExpandedYearCode(isExpanded ? null : point.yearCode)}
-                        className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
-                      >
-                        {isExpanded ? 'Ocultar' : 'Ver histórico real de preço'}
-                      </button>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setExpandedHistoryYearCode(isHistoryExpanded ? null : point.yearCode)}
+                          className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                        >
+                          {isHistoryExpanded ? 'Ocultar histórico' : 'Ver histórico real de preço'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedEstimatePriceEntryId(isEstimateExpanded ? null : point.priceEntryId)
+                          }
+                          className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                        >
+                          {isEstimateExpanded ? 'Ocultar estimativa' : 'Estimar valor real deste veículo'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                  {isExpanded && (
+                  {(isHistoryExpanded || isEstimateExpanded) && (
                     <tr>
-                      <td colSpan={4} className="bg-slate-50 px-4 py-4">
-                        <CalendarHistoryPanel
-                          vehicleType={vehicleType}
-                          fipeCode={fipeCode}
-                          yearCode={point.yearCode}
-                          fuel={point.fuel}
-                        />
+                      <td colSpan={4} className="space-y-4 bg-slate-50 px-4 py-4">
+                        {isHistoryExpanded && (
+                          <CalendarHistoryPanel
+                            vehicleType={vehicleType}
+                            fipeCode={fipeCode}
+                            yearCode={point.yearCode}
+                            fuel={point.fuel}
+                          />
+                        )}
+                        {isEstimateExpanded && <PriceEstimateForm priceEntryId={point.priceEntryId} />}
                       </td>
                     </tr>
                   )}
@@ -171,6 +200,128 @@ function CalendarHistoryPanel({
     <div>
       <CalendarHistoryChart months={months} fuel={fuel} />
       {cached && <p className="mt-1 text-xs text-slate-400">Resultado em cache (atualizado nas últimas 24h).</p>}
+    </div>
+  )
+}
+
+function PriceEstimateForm({ priceEntryId }: { priceEntryId: number }) {
+  const conditionsQuery = useVehicleConditions()
+  const extrasQuery = useVehicleExtras()
+  const mutation = usePriceEstimate(priceEntryId)
+
+  const [km, setKm] = useState('')
+  const [condition, setCondition] = useState<VehicleCondition | ''>('')
+  const [selectedExtras, setSelectedExtras] = useState<string[]>([])
+
+  function toggleExtra(key: string) {
+    setSelectedExtras((prev) => (prev.includes(key) ? prev.filter((extra) => extra !== key) : [...prev, key]))
+  }
+
+  function handleSubmit(event: FormEvent) {
+    event.preventDefault()
+    const kmValue = Number(km)
+    if (condition === '' || !Number.isFinite(kmValue) || kmValue < 0) {
+      return
+    }
+    mutation.mutate({ km: kmValue, condition, extras: selectedExtras })
+  }
+
+  return (
+    <div className="space-y-3">
+      <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-4 rounded-lg border border-slate-200 bg-white p-4">
+        <label className="flex flex-col text-xs font-medium text-slate-600">
+          Quilometragem
+          <input
+            type="number"
+            min={0}
+            step={1}
+            required
+            value={km}
+            onChange={(event) => setKm(event.target.value)}
+            className="mt-1 w-32 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900"
+          />
+        </label>
+
+        <label className="flex flex-col text-xs font-medium text-slate-600">
+          Estado de conservação
+          <select
+            required
+            value={condition}
+            onChange={(event) => setCondition(event.target.value as VehicleCondition)}
+            className="mt-1 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900"
+          >
+            <option value="" disabled>
+              Selecione...
+            </option>
+            {conditionsQuery.data?.map((option) => (
+              <option key={option.key} value={option.key}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <fieldset className="flex flex-col text-xs font-medium text-slate-600">
+          <legend>Opcionais</legend>
+          <div className="mt-1 flex max-w-md flex-wrap gap-x-3 gap-y-1">
+            {extrasQuery.data?.map((extra) => (
+              <label key={extra.key} className="flex items-center gap-1 text-sm font-normal text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={selectedExtras.includes(extra.key)}
+                  onChange={() => toggleExtra(extra.key)}
+                />
+                {extra.label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <button
+          type="submit"
+          disabled={mutation.isPending}
+          className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+        >
+          {mutation.isPending ? 'Calculando...' : 'Calcular valor estimado'}
+        </button>
+      </form>
+
+      {mutation.isError && <p className="text-sm text-red-600">Erro ao calcular: {mutation.error.message}</p>}
+
+      {mutation.isSuccess && <PriceEstimateResult result={mutation.data} />}
+    </div>
+  )
+}
+
+function PriceEstimateResult({ result }: { result: PriceEstimateResponse }) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-4">
+      <div className="flex flex-wrap gap-3">
+        <SummaryChip label="Preço FIPE (base)" value={currencyFormatter.format(result.basePrice)} />
+        <SummaryChip label="Valor estimado" value={currencyFormatter.format(result.adjustedPrice)} />
+      </div>
+
+      <ul className="mt-3 space-y-1 text-sm">
+        {result.components.map((component) => {
+          const color =
+            component.amount > 0 ? 'text-emerald-700' : component.amount < 0 ? 'text-red-700' : 'text-slate-500'
+          const sign = component.amount > 0 ? '+' : ''
+          return (
+            <li key={component.key} className="flex items-center justify-between gap-3">
+              <span className="text-slate-600">{component.label}</span>
+              <span className={`whitespace-nowrap font-medium ${color}`}>
+                {sign}
+                {currencyFormatter.format(component.amount)} ({percentFormatter.format(component.percent)})
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+
+      <p className="mt-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+        Isto é uma estimativa automática, não uma avaliação profissional — use como referência, não
+        como garantia de valor de venda ou compra.
+      </p>
     </div>
   )
 }

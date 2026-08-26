@@ -9,6 +9,7 @@ import com.fipeexplorer.backend.repository.PriceEntryRepository;
 import com.fipeexplorer.backend.repository.VehicleModelRepository;
 import com.fipeexplorer.backend.web.dto.BrandDto;
 import com.fipeexplorer.backend.web.dto.FuelTypeDto;
+import com.fipeexplorer.backend.web.dto.LabeledValueDto;
 import com.fipeexplorer.backend.web.dto.VehicleModelSummaryDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -54,6 +56,20 @@ public class CatalogController {
         return fuelTypeRepository.findAllByOrderByNameAsc()
                 .stream()
                 .map(CatalogController::toDto)
+                .toList();
+    }
+
+    @GetMapping("/vehicle-conditions")
+    public List<LabeledValueDto> getVehicleConditions() {
+        return Arrays.stream(VehicleCondition.values())
+                .map(c -> new LabeledValueDto(c.name(), c.label()))
+                .toList();
+    }
+
+    @GetMapping("/vehicle-extras")
+    public List<LabeledValueDto> getVehicleExtras() {
+        return Arrays.stream(VehicleExtra.values())
+                .map(e -> new LabeledValueDto(e.name(), e.label()))
                 .toList();
     }
 

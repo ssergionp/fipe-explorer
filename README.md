@@ -110,6 +110,56 @@ npm run build    # build de produção (roda type-check antes)
 | `/compare` | Comparador | Até 4 veículos lado a lado, com o mais barato e o mais caro do grupo destacados (cor + selo de texto). Os ids selecionados vão na própria URL — o link é compartilhável e sobrevive a um refresh. |
 | `/insights` | Insights | Estatísticas por tipo de veículo: resumo (modelos, faixa de preço), ranking de marcas mais caras/baratas (preço médio ponderado pelo ano mais recente de cada modelo, não pelo histórico inteiro — evita que marcas com modelos antigos distorçam a média) e distribuição por combustível. |
 
+## Calculadora de valor ajustado
+
+Início do pivô do projeto pra uso por pessoa comum (não só análise agregada da Tabela FIPE).
+Primeira peça: na tela de Detalhe, `POST /api/v1/vehicles/{priceEntryId}/price-estimate` ajusta
+o preço FIPE de uma linha específica (ano+combustível) pros três fatores que o preço médio da
+FIPE não captura — quilometragem, estado de conservação e opcionais — e devolve o preço ajustado
+junto com o detalhamento de cada componente. Sem persistência: é stateless, calcula e devolve.
+
+Toda a lógica fica centralizada em `PriceEstimateService`
+(`backend/.../estimate/PriceEstimateService.java`), com os percentuais como constantes nomeadas
+(nos enums `VehicleCondition`/`VehicleExtra`, ou na tabela de faixas de km dentro do serviço) —
+não estão espalhados pelo código. **Importante: essa é uma regra de negócio inventada para este
+produto, não uma fórmula com resposta "certa"** — os números abaixo são um ponto de partida
+propositalmente simples, pensado pra ser fácil de ajustar depois (mudar uma constante, não
+reescrever lógica) conforme o feedback de uso real chegar.
+
+Cada componente é um **percentual sobre o preço base da FIPE**, e os percentuais são somados
+(não compostos) antes de aplicar ao preço — assim o valor em R$ de cada linha do detalhamento
+soma exatamente o ajuste total, sem surpresa de arredondamento composto.
+
+**1. Quilometragem** — calcula-se uma km "esperada" pra idade do veículo (ano da linha de
+preço até o ano atual) assumindo um uso moderado de **12.000 km/ano**, e compara a km informada
+com essa expectativa em faixas (degraus, não uma curva contínua — mais fácil de explicar e de
+ajustar depois):
+
+| km informada ÷ km esperada | Ajuste |
+|---|---|
+| até 50% | +5% (muito abaixo do esperado) |
+| até 90% | +2% |
+| até 110% | 0% (dentro do esperado) |
+| até 150% | −5% |
+| até 200% | −10% |
+| acima de 200% | −15% (teto — evita desconto sem limite) |
+
+Veículo "zero km" (código de ano `32000` da Tabela FIPE) não tem idade: a km esperada é 0, então
+qualquer km informada acima de zero já cai na pior faixa.
+
+**2. Estado de conservação** — percentual fixo por faixa. "Bom" é a referência (0%, é
+aproximadamente o estado médio que o preço da FIPE já assume implicitamente): `Excelente +5%` /
+`Bom 0%` / `Regular −10%` / `Ruim −20%`.
+
+**3. Opcionais** — lista curta e pré-definida (não é texto livre), cada item soma um percentual
+fixo, independente dos outros: `Ar-condicionado +1%` / `Direção hidráulica/elétrica +1%` /
+`Rodas de liga leve +1,5%` / `Teto solar +2%` / `Bancos de couro +2%` / `Central multimídia
++1,5%` / `Blindagem +8%`.
+
+O intervalo resultante possível vai de aproximadamente −35% (estado ruim, km muito alta, sem
+opcionais) a +27% (excelente, km baixa, todos os opcionais) — sempre mantém o preço final
+positivo, sem precisar de um limite artificial.
+
 ## Build de produção
 
 Não há hospedagem configurada ainda; isto documenta o caminho pra chegar lá.

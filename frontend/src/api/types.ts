@@ -40,6 +40,7 @@ export type SortBy = 'MODEL_NAME' | 'PRICE'
 export type SortDir = 'ASC' | 'DESC'
 
 export interface PricePoint {
+  priceEntryId: number
   yearCode: string
   yearValue: string
   fuel: string
@@ -88,4 +89,30 @@ export interface TopBrand {
 export interface FuelDistributionEntry {
   fuel: string
   count: number
+}
+
+export type VehicleCondition = 'EXCELENTE' | 'BOM' | 'REGULAR' | 'RUIM'
+
+export interface LabeledValue {
+  key: string
+  label: string
+}
+
+export interface PriceEstimateRequest {
+  km: number
+  condition: VehicleCondition
+  extras: string[]
+}
+
+export interface PriceAdjustmentComponent {
+  key: string
+  label: string
+  percent: number
+  amount: number
+}
+
+export interface PriceEstimateResponse {
+  basePrice: number
+  adjustedPrice: number
+  components: PriceAdjustmentComponent[]
 }
