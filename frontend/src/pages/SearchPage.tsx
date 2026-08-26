@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   useBrands,
   useFuelTypes,
@@ -13,6 +13,7 @@ import {
 import type { SortBy, SortDir, VehicleType } from '../api/types'
 
 const PAGE_SIZE = 20
+const MAX_COMPARE_ITEMS = 4
 
 const VEHICLE_TYPE_LABELS: Record<VehicleType, string> = {
   CAR: 'Carro',
@@ -42,6 +43,7 @@ function formatYear(year: number) {
 }
 
 export function SearchPage() {
+  const navigate = useNavigate()
   const [type, setType] = useState<VehicleType | undefined>(undefined)
   const [brandId, setBrandId] = useState<number | undefined>(undefined)
   const [modelId, setModelId] = useState<number | undefined>(undefined)
@@ -49,6 +51,7 @@ export function SearchPage() {
   const [fuel, setFuel] = useState<string | undefined>(undefined)
   const [sortIndex, setSortIndex] = useState(0)
   const [page, setPage] = useState(0)
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
 
   const vehicleTypesQuery = useVehicleTypes()
   const brandsQuery = useBrands(type)
@@ -104,8 +107,24 @@ export function SearchPage() {
     setPage(0)
   }
 
+  function toggleSelected(id: number) {
+    setSelectedIds((prev) => {
+      if (prev.includes(id)) {
+        return prev.filter((selectedId) => selectedId !== id)
+      }
+      if (prev.length >= MAX_COMPARE_ITEMS) {
+        return prev
+      }
+      return [...prev, id]
+    })
+  }
+
+  function handleCompare() {
+    navigate(`/compare?ids=${selectedIds.join(',')}`)
+  }
+
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${selectedIds.length > 0 ? 'pb-16' : ''}`}>
       <div>
         <h1 className="text-2xl font-semibold text-slate-900">Busca</h1>
         <p className="mt-1 text-sm text-slate-600">
@@ -214,7 +233,40 @@ export function SearchPage() {
           Selecione um tipo de veículo para ver os resultados.
         </p>
       ) : (
-        <ResultsSection query={searchQuery} page={page} onPageChange={setPage} />
+        <ResultsSection
+          query={searchQuery}
+          page={page}
+          onPageChange={setPage}
+          selectedIds={selectedIds}
+          onToggleSelected={toggleSelected}
+        />
+      )}
+
+      {selectedIds.length > 0 && (
+        <div className="fixed inset-x-0 bottom-0 border-t border-slate-200 bg-white px-4 py-3 shadow-lg">
+          <div className="mx-auto flex max-w-5xl items-center justify-between">
+            <span className="text-sm text-slate-700">
+              {selectedIds.length} de {MAX_COMPARE_ITEMS} selecionados para comparação
+            </span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
+                onClick={() => setSelectedIds([])}
+              >
+                Limpar seleção
+              </button>
+              <button
+                type="button"
+                className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
+                disabled={selectedIds.length < 2}
+                onClick={handleCompare}
+              >
+                Comparar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
@@ -233,10 +285,14 @@ function ResultsSection({
   query,
   page,
   onPageChange,
+  selectedIds,
+  onToggleSelected,
 }: {
   query: ReturnType<typeof useVehicleSearch>
   page: number
   onPageChange: (page: number) => void
+  selectedIds: number[]
+  onToggleSelected: (id: number) => void
 }) {
   if (query.isPending) {
     return <p className="text-sm text-slate-500">Carregando resultados...</p>
@@ -266,6 +322,9 @@ function ResultsSection({
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-slate-600">
             <tr>
+              <th className="px-4 py-2 font-medium">
+                <span className="sr-only">Comparar</span>
+              </th>
               <th className="px-4 py-2 font-medium">Marca</th>
               <th className="px-4 py-2 font-medium">Modelo</th>
               <th className="px-4 py-2 font-medium">Ano</th>
@@ -275,25 +334,35 @@ function ResultsSection({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {data.items.map((item, index) => (
-              <tr
-                key={`${item.modelId}-${item.year}-${item.fuel}-${index}`}
-                className="hover:bg-slate-50"
-              >
-                <td className="px-4 py-2">{item.brand}</td>
-                <td className="px-4 py-2">
-                  <Link to={`/vehicles/${item.modelId}`} className="text-blue-600 hover:underline">
-                    {item.model}
-                  </Link>
-                </td>
-                <td className="px-4 py-2">
-                  {item.year === String(ZERO_KM_YEAR_CODE) ? 'Zero KM' : item.year}
-                </td>
-                <td className="px-4 py-2">{item.fuel}</td>
-                <td className="px-4 py-2">{item.fipeCode}</td>
-                <td className="px-4 py-2 text-right">{currencyFormatter.format(item.price)}</td>
-              </tr>
-            ))}
+            {data.items.map((item) => {
+              const isSelected = selectedIds.includes(item.id)
+              const isDisabled = !isSelected && selectedIds.length >= 4
+              return (
+                <tr key={item.id} className="hover:bg-slate-50">
+                  <td className="px-4 py-2">
+                    <input
+                      type="checkbox"
+                      aria-label={`Adicionar ${item.brand} ${item.model} (${item.fuel}, ${item.year}) à comparação`}
+                      checked={isSelected}
+                      disabled={isDisabled}
+                      onChange={() => onToggleSelected(item.id)}
+                    />
+                  </td>
+                  <td className="px-4 py-2">{item.brand}</td>
+                  <td className="px-4 py-2">
+                    <Link to={`/vehicles/${item.modelId}`} className="text-blue-600 hover:underline">
+                      {item.model}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-2">
+                    {item.year === String(ZERO_KM_YEAR_CODE) ? 'Zero KM' : item.year}
+                  </td>
+                  <td className="px-4 py-2">{item.fuel}</td>
+                  <td className="px-4 py-2">{item.fipeCode}</td>
+                  <td className="px-4 py-2 text-right">{currencyFormatter.format(item.price)}</td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>

@@ -18,6 +18,7 @@ export interface FuelType {
 }
 
 export interface VehicleSearchResult {
+  id: number
   modelId: number
   brand: string
   model: string

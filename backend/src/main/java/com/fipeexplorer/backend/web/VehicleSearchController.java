@@ -8,12 +8,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/vehicles")
@@ -75,6 +82,28 @@ public class VehicleSearchController {
         return PageResponseDto.from(results);
     }
 
+    /**
+     * ids fora do banco são ignorados silenciosamente (nunca derrubam a resposta inteira) — só
+     * a contagem de ids pedidos (2 a 4) é validada. A ordem de retorno segue a ordem pedida em
+     * {@code ids}, não a ordem de leitura do banco.
+     */
+    @GetMapping("/compare")
+    public List<VehicleSearchResultDto> compare(@RequestParam List<Long> ids) {
+        if (ids.size() < 2 || ids.size() > 4) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Informe entre 2 e 4 ids para comparar (recebido: " + ids.size() + ")");
+        }
+
+        Map<Long, PriceEntry> entriesById = priceEntryRepository.findAllById(ids).stream()
+                .collect(Collectors.toMap(PriceEntry::getId, Function.identity()));
+
+        return ids.stream()
+                .map(entriesById::get)
+                .filter(Objects::nonNull)
+                .map(VehicleSearchController::toDto)
+                .toList();
+    }
+
     private static String sortProperty(VehicleSearchSortBy sortBy) {
         return switch (sortBy) {
             case PRICE -> "price";
@@ -84,6 +113,7 @@ public class VehicleSearchController {
 
     private static VehicleSearchResultDto toDto(PriceEntry entry) {
         return new VehicleSearchResultDto(
+                entry.getId(),
                 entry.getVehicleModel().getId(),
                 entry.getVehicleModel().getBrand().getName(),
                 entry.getVehicleModel().getName(),

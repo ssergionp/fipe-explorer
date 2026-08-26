@@ -50,6 +50,14 @@ export function useFuelTypes() {
   })
 }
 
+export function useVehicleCompare(ids: number[]) {
+  return useQuery({
+    queryKey: ['vehicle-compare', ids],
+    queryFn: () => apiGet<VehicleSearchResult[]>('/vehicles/compare', { ids: ids.join(',') }),
+    enabled: ids.length >= 2 && ids.length <= 4,
+  })
+}
+
 export function useModelPriceHistory(modelId: number | undefined) {
   return useQuery({
     queryKey: ['model-price-history', modelId],
