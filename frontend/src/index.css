@@ -2,6 +2,40 @@
 
 :root {
   color-scheme: light dark;
+
+  --chart-surface: #fcfcfb;
+  --chart-text-secondary: #52514e;
+  --chart-text-muted: #898781;
+  --chart-grid: #e1e0d9;
+  --chart-axis: #c3c2b7;
+
+  /* Paleta categórica de referência (skill dataviz) — ordem e cores fixas por
+     combustível, nunca por posição/rank, para que o filtro não repinte séries. */
+  --fuel-gasolina: #2a78d6;
+  --fuel-diesel: #eb6834;
+  --fuel-flex: #1baf7a;
+  --fuel-alcool: #eda100;
+  --fuel-eletrico: #e87ba4;
+  --fuel-hibrido: #008300;
+  --fuel-gas-natural: #4a3aa7;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --chart-surface: #1a1a19;
+    --chart-text-secondary: #c3c2b7;
+    --chart-text-muted: #898781;
+    --chart-grid: #2c2c2a;
+    --chart-axis: #383835;
+
+    --fuel-gasolina: #3987e5;
+    --fuel-diesel: #d95926;
+    --fuel-flex: #199e70;
+    --fuel-alcool: #c98500;
+    --fuel-eletrico: #d55181;
+    --fuel-hibrido: #008300;
+    --fuel-gas-natural: #9085e9;
+  }
 }
 
 body {

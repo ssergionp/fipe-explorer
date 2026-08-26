@@ -3,6 +3,7 @@ import { apiGet } from './client'
 import type {
   Brand,
   FuelType,
+  ModelPriceHistory,
   PageResponse,
   SortBy,
   SortDir,
@@ -46,6 +47,15 @@ export function useFuelTypes() {
   return useQuery({
     queryKey: ['fuel-types'],
     queryFn: () => apiGet<FuelType[]>('/fuel-types'),
+  })
+}
+
+export function useModelPriceHistory(modelId: number | undefined) {
+  return useQuery({
+    queryKey: ['model-price-history', modelId],
+    queryFn: () => apiGet<ModelPriceHistory>(`/models/${modelId}/prices`),
+    enabled: modelId !== undefined,
+    retry: false,
   })
 }
 

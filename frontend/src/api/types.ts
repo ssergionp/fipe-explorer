@@ -37,3 +37,18 @@ export interface PageResponse<T> {
 
 export type SortBy = 'MODEL_NAME' | 'PRICE'
 export type SortDir = 'ASC' | 'DESC'
+
+export interface PricePoint {
+  yearCode: string
+  yearValue: string
+  fuel: string
+  price: number
+}
+
+export interface ModelPriceHistory {
+  modelId: number
+  brand: string
+  model: string
+  fipeCode: string
+  prices: PricePoint[]
+}
