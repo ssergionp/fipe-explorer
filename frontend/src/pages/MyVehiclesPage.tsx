@@ -48,7 +48,7 @@ export function MyVehiclesPage() {
         <h1 className="text-2xl font-semibold text-slate-900">Meus veículos</h1>
         <p className="text-sm text-slate-600">
           Você precisa{' '}
-          <Link to="/login" className="text-blue-600 underline">
+          <Link to="/login" className="text-brand-600 underline hover:text-brand-700">
             entrar
           </Link>{' '}
           para ver seus favoritos, estimativas salvas e alertas.
@@ -115,7 +115,7 @@ function FavoritesSection() {
                 <tr key={item.id}>
                   <td className="px-4 py-2">{item.brand}</td>
                   <td className="px-4 py-2">
-                    <Link to={`/vehicles/${item.modelId}`} className="text-blue-600 underline">
+                    <Link to={`/vehicles/${item.modelId}`} className="text-brand-600 underline hover:text-brand-700">
                       {item.model}
                     </Link>
                   </td>
@@ -166,7 +166,7 @@ function SavedEstimatesSection() {
                   <div>
                     <Link
                       to={`/vehicles/${estimate.vehicle.modelId}`}
-                      className="font-medium text-blue-600 underline"
+                      className="font-medium text-brand-600 underline hover:text-brand-700"
                     >
                       {estimate.vehicle.brand} {estimate.vehicle.model}
                     </Link>

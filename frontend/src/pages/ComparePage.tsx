@@ -55,7 +55,7 @@ export function ComparePage() {
 
   return (
     <div className="space-y-6">
-      <Link to="/" className="text-sm text-blue-600 underline">
+      <Link to="/" className="text-sm text-brand-600 underline hover:text-brand-700">
         ← Voltar para a busca
       </Link>
 
@@ -76,7 +76,7 @@ function EmptyState({ message }: { message: string }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-6 text-center">
       <p className="text-sm text-slate-600">{message}</p>
-      <Link to="/" className="mt-3 inline-block text-sm text-blue-600 underline">
+      <Link to="/" className="mt-3 inline-block text-sm text-brand-600 underline hover:text-brand-700">
         Ir para a busca
       </Link>
     </div>
@@ -142,7 +142,7 @@ function CompareCard({
   const highlightClass = isCheapest
     ? 'border-green-400 bg-green-50'
     : isMostExpensive
-      ? 'border-amber-400 bg-amber-50'
+      ? 'border-accent-400 bg-accent-50'
       : 'border-slate-200 bg-white'
 
   return (
@@ -188,7 +188,7 @@ function CompareCard({
 }
 
 function Badge({ tone, children }: { tone: 'green' | 'amber'; children: string }) {
-  const toneClass = tone === 'green' ? 'bg-green-600' : 'bg-amber-600'
+  const toneClass = tone === 'green' ? 'bg-green-600' : 'bg-accent-600'
   return (
     <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium text-white ${toneClass}`}>
       {children}

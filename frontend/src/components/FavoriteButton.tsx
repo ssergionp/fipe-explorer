@@ -37,7 +37,7 @@ export function FavoriteButton({ priceEntryId }: { priceEntryId: number }) {
       aria-label={isFavorited ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
       title={isFavorited ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
       className={`text-lg leading-none disabled:opacity-50 ${
-        isFavorited ? 'text-amber-500 hover:text-amber-600' : 'text-slate-300 hover:text-amber-500'
+        isFavorited ? 'text-accent-500 hover:text-accent-600' : 'text-slate-300 hover:text-accent-500'
       }`}
     >
       {isFavorited ? '★' : '☆'}

@@ -16,7 +16,7 @@ export default defineConfig({
         short_name: 'FIPE Explorer',
         description: 'Exploração e análise da Tabela FIPE: busca, comparador e alertas de preço.',
         lang: 'pt-BR',
-        theme_color: '#0f172a',
+        theme_color: '#2563eb',
         background_color: '#f8fafc',
         display: 'standalone',
         start_url: '/',

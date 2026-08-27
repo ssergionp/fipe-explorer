@@ -66,7 +66,7 @@ export function LoginPage() {
 
       <p className="text-sm text-slate-600">
         Ainda não tem conta?{' '}
-        <Link to="/cadastro" className="text-blue-600 underline">
+        <Link to="/cadastro" className="text-brand-600 underline hover:text-brand-700">
           Criar conta
         </Link>
       </p>

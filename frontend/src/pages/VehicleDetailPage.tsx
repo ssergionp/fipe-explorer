@@ -37,7 +37,7 @@ export function VehicleDetailPage() {
 
   return (
     <div className="space-y-6">
-      <Link to="/" className="text-sm text-blue-600 underline">
+      <Link to="/" className="text-sm text-brand-600 underline hover:text-brand-700">
         ← Voltar para a busca
       </Link>
 
@@ -196,7 +196,7 @@ function CalendarHistoryPanel({
 
   if (status !== 'AVAILABLE') {
     return (
-      <p className="text-sm text-amber-700">
+      <p className="text-sm text-accent-700">
         Histórico real indisponível no momento{reason ? `: ${reason}` : '.'}
       </p>
     )
@@ -362,7 +362,7 @@ function PriceEstimateResult({
       <ul className="mt-3 space-y-1 text-sm">
         {result.components.map((component) => {
           const color =
-            component.amount > 0 ? 'text-emerald-700' : component.amount < 0 ? 'text-red-700' : 'text-slate-500'
+            component.amount > 0 ? 'text-green-700' : component.amount < 0 ? 'text-red-700' : 'text-slate-500'
           const sign = component.amount > 0 ? '+' : ''
           return (
             <li key={component.key} className="flex items-center justify-between gap-3">
@@ -376,7 +376,7 @@ function PriceEstimateResult({
         })}
       </ul>
 
-      <p className="mt-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+      <p className="mt-3 rounded-md border border-accent-300 bg-accent-50 px-3 py-2 text-xs text-accent-800">
         Isto é uma estimativa automática, não uma avaliação profissional — use como referência, não
         como garantia de valor de venda ou compra.
       </p>

@@ -374,7 +374,7 @@ function ResultsSection({
                   </td>
                   <td className="px-4 py-2">{item.brand}</td>
                   <td className="px-4 py-2">
-                    <Link to={`/vehicles/${item.modelId}`} className="text-blue-600 underline">
+                    <Link to={`/vehicles/${item.modelId}`} className="text-brand-600 underline hover:text-brand-700">
                       {item.model}
                     </Link>
                   </td>

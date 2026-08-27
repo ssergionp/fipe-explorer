@@ -92,7 +92,7 @@ export function RegisterPage() {
           />
           <span>
             Li e aceito a{' '}
-            <Link to="/privacidade" className="text-blue-600 underline" target="_blank">
+            <Link to="/privacidade" className="text-brand-600 underline hover:text-brand-700" target="_blank">
               política de privacidade
             </Link>
             .
@@ -112,7 +112,7 @@ export function RegisterPage() {
 
       <p className="text-sm text-slate-600">
         Já tem conta?{' '}
-        <Link to="/login" className="text-blue-600 underline">
+        <Link to="/login" className="text-brand-600 underline hover:text-brand-700">
           Entrar
         </Link>
       </p>
