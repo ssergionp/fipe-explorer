@@ -20,6 +20,7 @@ import type {
   VehicleModelSummary,
   VehicleSearchResult,
   VehicleType,
+  WatchedVehicle,
 } from './types'
 
 export function useVehicleTypes() {
@@ -160,6 +161,32 @@ export function useDeleteSavedPriceEstimate() {
   return useMutation({
     mutationFn: (id: number) => apiDelete(`/me/price-estimates/${id}`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['saved-price-estimates'] }),
+  })
+}
+
+export function useWatchedVehicles() {
+  const { isAuthenticated } = useAuth()
+  return useQuery({
+    queryKey: ['watched-vehicles'],
+    queryFn: () => apiGet<WatchedVehicle[]>('/me/watched-vehicles'),
+    enabled: isAuthenticated,
+  })
+}
+
+export function useWatchVehicle() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (request: { fipeCode: string; thresholdPercent?: number }) =>
+      apiPost<WatchedVehicle>('/me/watched-vehicles', request),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['watched-vehicles'] }),
+  })
+}
+
+export function useUnwatchVehicle() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (fipeCode: string) => apiDelete(`/me/watched-vehicles/${fipeCode}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['watched-vehicles'] }),
   })
 }
 

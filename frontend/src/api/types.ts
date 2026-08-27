@@ -144,3 +144,12 @@ export interface SavedPriceEstimate {
   components: PriceAdjustmentComponent[]
   createdAt: string
 }
+
+export interface WatchedVehicle {
+  id: number
+  fipeCode: string
+  brand: string | null
+  model: string | null
+  thresholdPercent: number
+  createdAt: string
+}

@@ -13,6 +13,7 @@ import { useAuth } from '../auth/AuthContext'
 import { CalendarHistoryChart } from '../components/CalendarHistoryChart'
 import { DepreciationChart } from '../components/DepreciationChart'
 import { FavoriteButton } from '../components/FavoriteButton'
+import { WatchVehicleButton } from '../components/WatchVehicleButton'
 import { extractYear, formatYearLabel } from '../lib/year'
 
 const currencyFormatter = new Intl.NumberFormat('pt-BR', {
@@ -68,7 +69,11 @@ function VehicleDetail({ data }: { data: NonNullable<ReturnType<typeof useModelP
         <h1 className="text-2xl font-semibold text-slate-900">
           {brand} {model}
         </h1>
+        <p className="mt-1 text-sm text-slate-600">Código FIPE {fipeCode}</p>
         <p className="mt-2 text-sm text-slate-500">Sem dados de preço para este modelo.</p>
+        <div className="mt-3">
+          <WatchVehicleButton fipeCode={fipeCode} />
+        </div>
       </div>
     )
   }
@@ -90,9 +95,10 @@ function VehicleDetail({ data }: { data: NonNullable<ReturnType<typeof useModelP
         </h1>
         <p className="mt-1 text-sm text-slate-600">Código FIPE {fipeCode}</p>
 
-        <div className="mt-3 flex gap-3">
+        <div className="mt-3 flex flex-wrap items-end gap-3">
           <SummaryChip label="Preço mínimo" value={currencyFormatter.format(minPrice)} />
           <SummaryChip label="Preço máximo" value={currencyFormatter.format(maxPrice)} />
+          <WatchVehicleButton fipeCode={fipeCode} />
         </div>
       </div>
 
