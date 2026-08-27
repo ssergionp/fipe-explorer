@@ -20,6 +20,11 @@ spring:
 fipe:
   import:
     csv-path: ${FIPE_CSV_PATH:../data/tabela-fipe-336.csv}
+    incoming-dir: ${FIPE_IMPORT_INCOMING_DIR:../data/incoming}
+    processed-dir: ${FIPE_IMPORT_PROCESSED_DIR:../data/processed}
+    schedule:
+      # Segundo Spring (6 campos): seg min hora dia-do-mês mês dia-da-semana. Default: dia 1, 3h.
+      cron: ${FIPE_IMPORT_SCHEDULE_CRON:0 0 3 1 * *}
   cors:
     allowed-origins: ${FRONTEND_ORIGIN:http://localhost:5173}
   external-api:

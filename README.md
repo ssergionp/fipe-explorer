@@ -5,8 +5,9 @@ uma réplica do consulta oficial da FIPE — o objetivo é permitir buscas combi
 lado a lado entre veículos e visão agregada (rankings, distribuição por combustível) sobre o
 mesmo dado histórico.
 
-Os dados vêm de um CSV estático da Tabela FIPE (`data/tabela-fipe-336.csv`), importado uma
-única vez para um banco Postgres na primeira subida do backend.
+Os dados vêm de CSVs da Tabela FIPE — um CSV semente inicial (`data/tabela-fipe-336.csv`) mais
+atualizações mensais soltas em `data/incoming/` — importados automaticamente pro Postgres a cada
+subida do backend (veja "Atualização mensal dos dados" abaixo).
 
 ## Stack
 
@@ -37,7 +38,8 @@ frontend/   SPA (Vite + React). src/:
               components/  componentes de UI reaproveitados entre telas (ex.: gráfico de depreciação)
               lib/         utilitários compartilhados (paleta de combustível, formatação de ano)
 
-data/       CSV de origem da Tabela FIPE (tabela-fipe-336.csv)
+data/       tabela-fipe-336.csv (CSV semente) + incoming/ (novos CSVs mensais, aguardando
+              processamento) + processed/ (já importados)
 docker-compose.yml   Postgres de desenvolvimento
 ```
 
@@ -51,8 +53,8 @@ A ordem importa — cada passo depende do anterior estar de pé:
 # 1. banco de dados (Postgres, porta 5433)
 docker compose up -d
 
-# 2. backend — importa o CSV automaticamente na primeira subida (só quando a tabela
-#    price_entry está vazia; nas próximas vezes o import é pulado)
+# 2. backend — importa automaticamente o CSV semente e qualquer CSV novo em data/incoming/
+#    em toda subida (mês já importado é pulado, não é só a primeira vez)
 cd backend
 ./mvnw spring-boot:run
 
@@ -75,7 +77,10 @@ portas padrão colidirem com algo na sua máquina.
 |---|---|---|
 | `DB_URL` | `jdbc:postgresql://localhost:5433/fipe_explorer` | conexão Postgres |
 | `DB_USER` / `DB_PASSWORD` | `fipe` / `fipe` | credenciais do Postgres |
-| `FIPE_CSV_PATH` | `../data/tabela-fipe-336.csv` | caminho do CSV pra importação inicial |
+| `FIPE_CSV_PATH` | `../data/tabela-fipe-336.csv` | caminho do CSV semente |
+| `FIPE_IMPORT_INCOMING_DIR` | `../data/incoming` | pasta escaneada em toda subida por CSVs mensais novos |
+| `FIPE_IMPORT_PROCESSED_DIR` | `../data/processed` | pra onde um CSV de `incoming/` vai depois de importado com sucesso |
+| `FIPE_IMPORT_SCHEDULE_CRON` | `0 0 3 1 * *` | cron (6 campos, formato Spring) do import mensal — default: dia 1, 3h |
 | `FRONTEND_ORIGIN` | `http://localhost:5173` | origem(ns) liberada(s) no CORS, separadas por vírgula |
 | `SERVER_PORT` | `8080` | porta HTTP da API |
 
@@ -100,6 +105,43 @@ npm run lint     # oxlint
 npx tsc -b       # type-check
 npm run build    # build de produção (roda type-check antes)
 ```
+
+## Atualização mensal dos dados
+
+A Tabela FIPE muda todo mês, mas não existe uma fonte pública gratuita que baixe um CSV novo
+sozinha — a API pública da FIPE já integrada nesta aplicação (usada sob demanda pra histórico
+mensal de um veículo específico na tela de Detalhe) tem cota baixa demais (500–1.000
+requisições/dia) pra reconstruir as ~50 mil linhas do zero todo mês.
+"Automatizado" aqui significa: você baixa o CSV do mês manualmente (mesmo processo do CSV
+semente), solta em `data/incoming/`, sobe o backend — o resto é automático.
+
+O import (`IncomingCsvScanner`) é disparado por três caminhos diferentes, todos chamando
+exatamente o mesmo fluxo — nenhum deles é "o caminho especial":
+1. **Startup** — toda subida do backend, útil em ambientes que reiniciam com frequência.
+2. **Cron mensal** — `@Scheduled`, dia 1 às 3h por padrão (configurável via
+   `FIPE_IMPORT_SCHEDULE_CRON`), pra ambientes de longa duração que não reiniciam sozinhos.
+3. **Sob demanda** — `POST /api/v1/admin/import/trigger`, autenticado (**não é um papel de
+   admin — este projeto não usa RBAC ainda**, é só "usuário logado"), pra rodar o import sem
+   esperar o cron nem reiniciar o app.
+
+Qualquer um dos três:
+1. Olha o CSV semente e qualquer `*.csv` em `data/incoming/`.
+2. Pra cada um, verifica se o **mês de referência** daquele arquivo (não o nome do arquivo) já
+   está registrado na tabela `import_run`. Um CSV baixado de novo com outro nome pro mesmo mês
+   não duplica dado — inclusive entre gatilhos diferentes (cron e trigger manual no mesmo mês não
+   duplicam `price_entry`).
+3. Importa o que for novo e registra em `import_run` (arquivo, mês, quantidade de linhas).
+4. Move o arquivo de `data/incoming/` pra `data/processed/` depois de importado com sucesso.
+
+Um CSV malformado (cabeçalho errado, preço ilegível etc.) é logado como erro e ignorado — não
+derruba a chamada, e o arquivo continua em `data/incoming/` (visivelmente pendente) pra você
+investigar.
+
+`reference_month` (ex. "agosto de 2026") é o texto original da FIPE, guardado como veio — mas
+não ordena cronologicamente como string. `reference_month_key` (tipo `DATE`, dia 1 do mês) existe
+em `price_entry` e `import_run` exatamente pra isso, e é a base pra um gráfico de preço real ao
+longo do tempo usando só os dados já importados (sem depender da API externa limitada) — ainda
+não construído, mas o dado já está pronto pra isso.
 
 ## As telas
 

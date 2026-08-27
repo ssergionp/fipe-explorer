@@ -22,11 +22,14 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Date;
 import java.sql.Types;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class FipeCsvImportService {
@@ -35,8 +38,8 @@ public class FipeCsvImportService {
     private static final int BATCH_SIZE = 500;
     private static final String INSERT_PRICE_ENTRY_SQL = """
             INSERT INTO price_entry
-                (vehicle_model_id, fuel_type_id, year_code, year_value, price, reference_month)
-            VALUES (?, ?, ?, ?, ?, ?)
+                (vehicle_model_id, fuel_type_id, year_code, year_value, price, reference_month, reference_month_key)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """;
 
     private final BrandRepository brandRepository;
@@ -54,8 +57,26 @@ public class FipeCsvImportService {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    /** Lê só a primeira linha de dado pra descobrir o mês de referência, sem importar nada. */
+    public Optional<String> peekReferenceMonth(Path csvPath) {
+        try (Reader reader = Files.newBufferedReader(csvPath, StandardCharsets.UTF_8);
+             CSVParser parser = CSVFormat.DEFAULT.builder()
+                     .setHeader()
+                     .setSkipHeaderRecord(true)
+                     .build()
+                     .parse(reader)) {
+            for (CSVRecord record : parser) {
+                return Optional.of(record.get("Month"));
+            }
+            return Optional.empty();
+        } catch (IOException | IllegalArgumentException e) {
+            log.warn("Não foi possível ler o mês de referência de {}: {}", csvPath, e.getMessage());
+            return Optional.empty();
+        }
+    }
+
     @Transactional
-    public void importCsv(Path csvPath) {
+    public int importCsv(Path csvPath) {
         log.info("Iniciando importação do CSV da Tabela FIPE: {}", csvPath.toAbsolutePath());
 
         Map<String, Brand> brandCache = new HashMap<>();
@@ -83,6 +104,8 @@ public class FipeCsvImportService {
                         key -> resolveVehicleModel(brand, record));
 
                 BigDecimal price = FipePriceParser.parse(record.get("Price"));
+                String monthText = record.get("Month");
+                LocalDate referenceMonthKey = ReferenceMonthParser.parse(monthText);
 
                 pendingPriceEntries.add(new Object[] {
                         vehicleModel.getId(),
@@ -90,7 +113,8 @@ public class FipeCsvImportService {
                         record.get("Year Code"),
                         record.get("Year Value"),
                         price,
-                        record.get("Month")
+                        monthText,
+                        Date.valueOf(referenceMonthKey)
                 });
 
                 imported++;
@@ -106,13 +130,15 @@ public class FipeCsvImportService {
 
         log.info("Importação concluída: {} marcas, {} combustíveis, {} modelos, {} registros de preço",
                 brandCache.size(), fuelTypeCache.size(), modelCache.size(), imported);
+
+        return imported;
     }
 
     private void flushPriceEntries(List<Object[]> pendingPriceEntries) {
         if (pendingPriceEntries.isEmpty()) {
             return;
         }
-        int[] argTypes = {Types.BIGINT, Types.BIGINT, Types.VARCHAR, Types.VARCHAR, Types.NUMERIC, Types.VARCHAR};
+        int[] argTypes = {Types.BIGINT, Types.BIGINT, Types.VARCHAR, Types.VARCHAR, Types.NUMERIC, Types.VARCHAR, Types.DATE};
         jdbcTemplate.batchUpdate(INSERT_PRICE_ENTRY_SQL, pendingPriceEntries, argTypes);
         pendingPriceEntries.clear();
     }

@@ -13,9 +13,10 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
- * Endpoints protegidos: /api/v1/auth/me e tudo sob /api/v1/me/** (favoritos, estimativas salvas —
- * primeiras features que precisam saber "de quem" é o dado). Todo o resto (busca, detalhe,
- * calculadora pública, histórico, etc.) continua público, exatamente como antes da autenticação.
+ * Endpoints protegidos: /api/v1/auth/me, tudo sob /api/v1/me/** (favoritos, estimativas salvas) e
+ * /api/v1/admin/** (disparo manual de import - "protegido" aqui é só "usuário logado", não um
+ * papel de admin: este projeto não usa RBAC ainda). Todo o resto (busca, detalhe, calculadora
+ * pública, histórico, etc.) continua público, exatamente como antes da autenticação.
  */
 @Configuration
 @EnableWebSecurity
@@ -47,6 +48,7 @@ public class SecurityConfig {
                                 "/api/v1/auth/refresh", "/api/v1/auth/logout").permitAll()
                         .requestMatchers("/api/v1/auth/me").authenticated()
                         .requestMatchers("/api/v1/me/**").authenticated()
+                        .requestMatchers("/api/v1/admin/**").authenticated()
                         .anyRequest().permitAll() // tudo mais (busca, detalhe, calculadora etc.) continua público
                 )
                 .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(authenticationEntryPoint))

@@ -16,6 +16,11 @@ node_modules/
 .env
 .env.local
 
+# CSVs mensais da FIPE (dados baixados manualmente, não código - o CSV semente em data/ continua
+# versionado; só os incrementos mensais processados automaticamente ficam de fora do git)
+data/incoming/*.csv
+data/processed/*.csv
+
 # SO
 .DS_Store
 Thumbs.db
