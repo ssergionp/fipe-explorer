@@ -33,7 +33,8 @@ class PriceEstimateServiceTest {
 
     private PriceEntry priceEntry(String yearCode, String price) {
         VehicleModel model = new VehicleModel(brand, "469", "Elba CS 1.6", "CAR", "001023-5");
-        return new PriceEntry(model, gasolina, yearCode, "veículo de teste", new BigDecimal(price), "agosto de 2026");
+        return new PriceEntry(model, gasolina, yearCode, "veículo de teste", new BigDecimal(price),
+                "agosto de 2026", java.time.LocalDate.of(2026, 8, 1));
     }
 
     private PriceEstimateRequest request(long km, VehicleCondition condition, VehicleExtra... extras) {

@@ -16,6 +16,20 @@ spring:
         order_inserts: true
   flyway:
     enabled: true
+  mail:
+    # Relay SMTP do Resend (https://resend.com/docs/send-with-smtp). SMTP_PASSWORD vazio por
+    # default: sem ele, o envio falha (logado, não derruba nada) até você configurar uma API key
+    # do Resend com domínio verificado.
+    host: ${SMTP_HOST:smtp.resend.com}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:resend}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 fipe:
   import:
@@ -36,6 +50,9 @@ fipe:
     secret: ${JWT_SECRET:xuuMCZakUvLTz71IR+pD0X4wKOaukd5vZt9Ar21FIWhXv+ZP9X7OUcHWxh92XtBteDHS1mgg7T2gUhxQ3vcwZQ==}
     access-token-expiration-minutes: ${JWT_ACCESS_TOKEN_EXPIRATION_MINUTES:15}
     refresh-token-expiration-days: ${JWT_REFRESH_TOKEN_EXPIRATION_DAYS:7}
+  mail:
+    # Precisa ser um endereço do domínio verificado na sua conta Resend - senão o envio falha.
+    from: ${FIPE_MAIL_FROM:alerts@fipe-explorer.example.com}
 
 server:
   port: ${SERVER_PORT:8080}

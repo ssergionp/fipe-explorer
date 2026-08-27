@@ -11,6 +11,8 @@ public interface VehicleModelRepository extends JpaRepository<VehicleModel, Long
 
     Optional<VehicleModel> findByBrandIdAndFipeModelCode(Long brandId, String fipeModelCode);
 
+    Optional<VehicleModel> findByFipePriceCode(String fipePriceCode);
+
     @Query("select distinct vm.vehicleType from VehicleModel vm order by vm.vehicleType")
     List<String> findDistinctVehicleTypes();
 

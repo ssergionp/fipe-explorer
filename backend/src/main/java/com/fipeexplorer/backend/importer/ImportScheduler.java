@@ -9,22 +9,23 @@ import org.springframework.stereotype.Component;
  * Disparo mensal do mesmo fluxo que o startup (CsvImportRunner) e o endpoint sob demanda
  * (AdminImportController) usam - a checagem de startup continua útil pra ambientes que reiniciam
  * com frequência, mas não é mais o único jeito de disparar um import (um deploy que fica no ar o
- * mês inteiro sem reiniciar agora também pega CSVs novos soltos em data/incoming/).
+ * mês inteiro sem reiniciar agora também pega CSVs novos soltos em data/incoming/, e dispara
+ * alertas de preço pros veículos observados).
  */
 @Component
 public class ImportScheduler {
 
     private static final Logger log = LoggerFactory.getLogger(ImportScheduler.class);
 
-    private final IncomingCsvScanner incomingCsvScanner;
+    private final ImportOrchestrator importOrchestrator;
 
-    public ImportScheduler(IncomingCsvScanner incomingCsvScanner) {
-        this.incomingCsvScanner = incomingCsvScanner;
+    public ImportScheduler(ImportOrchestrator importOrchestrator) {
+        this.importOrchestrator = importOrchestrator;
     }
 
     @Scheduled(cron = "${fipe.import.schedule.cron}")
     public void scanAndImport() {
         log.info("Disparando scan agendado de CSVs de importação.");
-        incomingCsvScanner.scanAndImport();
+        importOrchestrator.runImportAndCheckAlerts();
     }
 }

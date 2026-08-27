@@ -6,14 +6,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class CsvImportRunner implements CommandLineRunner {
 
-    private final IncomingCsvScanner incomingCsvScanner;
+    private final ImportOrchestrator importOrchestrator;
 
-    public CsvImportRunner(IncomingCsvScanner incomingCsvScanner) {
-        this.incomingCsvScanner = incomingCsvScanner;
+    public CsvImportRunner(ImportOrchestrator importOrchestrator) {
+        this.importOrchestrator = importOrchestrator;
     }
 
     @Override
     public void run(String... args) {
-        incomingCsvScanner.scanAndImport();
+        importOrchestrator.runImportAndCheckAlerts();
     }
 }

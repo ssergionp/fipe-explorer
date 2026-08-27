@@ -10,6 +10,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "price_entry")
@@ -39,17 +40,21 @@ public class PriceEntry {
     @Column(name = "reference_month", nullable = false)
     private String referenceMonth;
 
+    @Column(name = "reference_month_key", nullable = false)
+    private LocalDate referenceMonthKey;
+
     protected PriceEntry() {
     }
 
     public PriceEntry(VehicleModel vehicleModel, FuelType fuelType, String yearCode, String yearValue,
-                       BigDecimal price, String referenceMonth) {
+                       BigDecimal price, String referenceMonth, LocalDate referenceMonthKey) {
         this.vehicleModel = vehicleModel;
         this.fuelType = fuelType;
         this.yearCode = yearCode;
         this.yearValue = yearValue;
         this.price = price;
         this.referenceMonth = referenceMonth;
+        this.referenceMonthKey = referenceMonthKey;
     }
 
     public Long getId() {
@@ -78,5 +83,9 @@ public class PriceEntry {
 
     public String getReferenceMonth() {
         return referenceMonth;
+    }
+
+    public LocalDate getReferenceMonthKey() {
+        return referenceMonthKey;
     }
 }

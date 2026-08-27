@@ -81,6 +81,11 @@ portas padrão colidirem com algo na sua máquina.
 | `FIPE_IMPORT_INCOMING_DIR` | `../data/incoming` | pasta escaneada em toda subida por CSVs mensais novos |
 | `FIPE_IMPORT_PROCESSED_DIR` | `../data/processed` | pra onde um CSV de `incoming/` vai depois de importado com sucesso |
 | `FIPE_IMPORT_SCHEDULE_CRON` | `0 0 3 1 * *` | cron (6 campos, formato Spring) do import mensal — default: dia 1, 3h |
+| `SMTP_HOST` | `smtp.resend.com` | relay SMTP usado pro envio de alertas de preço |
+| `SMTP_PORT` | `587` | porta do relay SMTP (STARTTLS) |
+| `SMTP_USERNAME` | `resend` | usuário do relay SMTP (fixo `resend` no Resend) |
+| `SMTP_PASSWORD` | *(vazio)* | senha do relay SMTP — no Resend, é a API key. Vazio = envio falha (logado, não derruba nada) |
+| `FIPE_MAIL_FROM` | `alerts@fipe-explorer.example.com` | remetente dos e-mails de alerta — precisa ser de um domínio verificado na conta Resend |
 | `FRONTEND_ORIGIN` | `http://localhost:5173` | origem(ns) liberada(s) no CORS, separadas por vírgula |
 | `SERVER_PORT` | `8080` | porta HTTP da API |
 
@@ -115,8 +120,8 @@ requisições/dia) pra reconstruir as ~50 mil linhas do zero todo mês.
 "Automatizado" aqui significa: você baixa o CSV do mês manualmente (mesmo processo do CSV
 semente), solta em `data/incoming/`, sobe o backend — o resto é automático.
 
-O import (`IncomingCsvScanner`) é disparado por três caminhos diferentes, todos chamando
-exatamente o mesmo fluxo — nenhum deles é "o caminho especial":
+O import em si (`ImportOrchestrator` → `IncomingCsvScanner`) é disparado por três caminhos
+diferentes, todos chamando exatamente o mesmo fluxo — nenhum deles é "o caminho especial":
 1. **Startup** — toda subida do backend, útil em ambientes que reiniciam com frequência.
 2. **Cron mensal** — `@Scheduled`, dia 1 às 3h por padrão (configurável via
    `FIPE_IMPORT_SCHEDULE_CRON`), pra ambientes de longa duração que não reiniciam sozinhos.
@@ -132,6 +137,8 @@ Qualquer um dos três:
    duplicam `price_entry`).
 3. Importa o que for novo e registra em `import_run` (arquivo, mês, quantidade de linhas).
 4. Move o arquivo de `data/incoming/` pra `data/processed/` depois de importado com sucesso.
+5. Se algo novo entrou (passo 3 não ficou vazio), dispara a checagem de alertas de preço (veja
+   "Alertas de preço" abaixo) — se nada era novo, a checagem nem roda.
 
 Um CSV malformado (cabeçalho errado, preço ilegível etc.) é logado como erro e ignorado — não
 derruba a chamada, e o arquivo continua em `data/incoming/` (visivelmente pendente) pra você
@@ -142,6 +149,30 @@ não ordena cronologicamente como string. `reference_month_key` (tipo `DATE`, di
 em `price_entry` e `import_run` exatamente pra isso, e é a base pra um gráfico de preço real ao
 longo do tempo usando só os dados já importados (sem depender da API externa limitada) — ainda
 não construído, mas o dado já está pronto pra isso.
+
+## Alertas de preço
+
+Um usuário logado pode "observar" um veículo (por `fipe_code`) e receber um e-mail quando o preço
+mudar significativamente. Sem tela no frontend ainda — só os endpoints:
+
+| Endpoint | O que faz |
+|---|---|
+| `POST /api/v1/me/watched-vehicles` | Observa um `fipeCode`. `thresholdPercent` opcional (fração, ex. `0.05` = 5%; default 5% se omitido). Chamar de novo pro mesmo veículo **atualiza** o threshold (upsert) em vez de duplicar — diferente de favoritos, aqui o threshold é dado mutável que faz sentido sobrescrever. 404 se o `fipeCode` não existe. |
+| `GET /api/v1/me/watched-vehicles` | Lista os veículos observados pelo usuário logado. |
+| `DELETE /api/v1/me/watched-vehicles/{fipeCode}` | Para de observar. Idempotente (remover de novo não é erro). |
+
+A checagem (`PriceAlertService`) roda ao final de qualquer import que trouxe algo novo (veja
+"Atualização mensal dos dados" acima — os três gatilhos convergem no mesmo `ImportOrchestrator`,
+então cron e trigger manual acionam exatamente a mesma lógica de comparação). Um `fipe_code` pode
+ter várias linhas de preço (uma por combinação ano/combustível), então a comparação é feita
+**por linha**, não por veículo inteiro: agrupa as `price_entry` por (ano, combustível), ordena por
+`reference_month_key` e compara as duas mais recentes. Linha nova (menos de 2 meses de histórico)
+é ignorada — não tem preço anterior pra comparar. O alerta dispara nos dois sentidos (alta ou
+queda) sempre que a variação percentual absoluta de qualquer linha ultrapassa o `thresholdPercent`
+daquele watch; o e-mail (Spring Mail via relay SMTP do Resend) lista todas as linhas que
+dispararam, com o preço antigo, o novo e a variação de cada uma. Sem uma `SMTP_PASSWORD`
+configurada (default de desenvolvimento), o envio falha silenciosamente — fica logado como erro,
+mas nunca derruba a checagem nem o import.
 
 ## As telas
 
