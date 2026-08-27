@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from './auth/AuthContext'
 import { hasSeenOnboarding, markOnboardingSeen } from './auth/onboardingStorage'
 import { useCurrentUser } from './auth/useCurrentUser'
+import { Footer } from './components/Footer'
 import { OnboardingModal } from './components/OnboardingModal'
 
 function navLinkClass({ isActive }: { isActive: boolean }) {
@@ -28,7 +29,7 @@ export function Layout() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="flex min-h-screen flex-col bg-slate-50">
       <header className="border-b border-slate-200 bg-white">
         <nav className="mx-auto flex max-w-5xl items-center gap-2 px-4 py-3">
           <span className="mr-4 text-lg font-semibold text-slate-900">FIPE Explorer</span>
@@ -72,9 +73,11 @@ export function Layout() {
           </div>
         </nav>
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-6">
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
         <Outlet />
       </main>
+
+      <Footer />
 
       {showOnboarding && <OnboardingModal onDismiss={dismissOnboarding} />}
     </div>

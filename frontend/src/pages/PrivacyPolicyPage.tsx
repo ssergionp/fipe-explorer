@@ -6,26 +6,45 @@ export function PrivacyPolicyPage() {
       <section className="space-y-2">
         <h2 className="text-lg font-semibold text-slate-900">Quais dados guardamos</h2>
         <p className="text-sm text-slate-700">
-          Ao criar uma conta no FIPE Explorer, guardamos apenas o seu e-mail e uma versão
-          criptografada (hash) da sua senha — nunca a senha em texto puro. Não pedimos nome,
-          telefone, CPF ou qualquer outro dado pessoal nesta etapa.
+          Ao criar uma conta no FIPE Explorer, guardamos o seu e-mail e uma versão criptografada
+          (hash) da sua senha — nunca a senha em texto puro. Não pedimos nome, telefone, CPF ou
+          qualquer outro dado pessoal no cadastro. Conforme você usa as funcionalidades que exigem
+          login, também guardamos: veículos favoritados, estimativas de valor ajustado que você
+          salvar (quilometragem, estado de conservação, opcionais e o resultado calculado) e
+          veículos que você observar para alertas de preço.
         </p>
       </section>
 
       <section className="space-y-2">
         <h2 className="text-lg font-semibold text-slate-900">Para que usamos</h2>
         <p className="text-sm text-slate-700">
-          Só para autenticar o seu acesso à conta (login). Hoje a conta ainda não desbloqueia
-          nenhuma funcionalidade nova — busca, comparador, insights e a calculadora de valor
-          ajustado continuam totalmente públicos, sem exigir login. A conta é a base para recursos
-          futuros que vão depender de saber "de quem" é o dado, como favoritos e alertas de preço.
+          Pra autenticar o seu acesso à conta e pra viabilizar as funcionalidades que dependem de
+          saber "de quem" é o dado: favoritos, estimativas salvas e alertas de preço. Busca,
+          comparador, insights e a calculadora de valor ajustado continuam públicos, sem exigir
+          login.
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-lg font-semibold text-slate-900">Alertas de preço por e-mail</h2>
+        <p className="text-sm text-slate-700">
+          Ao observar um veículo, guardamos o código FIPE dele, o percentual de variação que você
+          configurou (ou o padrão de 5%) e a data em que você começou a observá-lo, vinculados à
+          sua conta. Não é um e-mail periódico: só enviamos um alerta quando novos dados da Tabela
+          FIPE são importados (normalmente uma vez por mês) <em>e</em> o preço de algum veículo que
+          você observa variou acima do percentual configurado. Pra parar de receber, desmarque
+          "observar" na ficha do veículo ou use "Parar de observar" na aba Alertas em "Meus
+          veículos" — isso remove o registro e interrompe os e-mails imediatamente.
         </p>
       </section>
 
       <section className="space-y-2">
         <h2 className="text-lg font-semibold text-slate-900">Compartilhamento com terceiros</h2>
         <p className="text-sm text-slate-700">
-          Não compartilhamos, vendemos ou repassamos seu e-mail a nenhum terceiro.
+          Não vendemos nem repassamos seu e-mail para fins de marketing ou publicidade. O único
+          compartilhamento que fazemos é com o provedor de envio de e-mail transacional (Resend),
+          exclusivamente para entregar os alertas de preço que você configurou — nenhum outro dado
+          seu é enviado a esse provedor.
         </p>
       </section>
 

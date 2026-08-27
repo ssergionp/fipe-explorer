@@ -91,7 +91,11 @@ export function RegisterPage() {
             className="mt-0.5"
           />
           <span>
-            Li e aceito a{' '}
+            Li e aceito os{' '}
+            <Link to="/termos" className="text-brand-600 underline hover:text-brand-700" target="_blank">
+              termos de uso
+            </Link>{' '}
+            e a{' '}
             <Link to="/privacidade" className="text-brand-600 underline hover:text-brand-700" target="_blank">
               política de privacidade
             </Link>

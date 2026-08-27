@@ -7,6 +7,7 @@ import { MyVehiclesPage } from './pages/MyVehiclesPage'
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { SearchPage } from './pages/SearchPage'
+import { TermsOfUsePage } from './pages/TermsOfUsePage'
 import { VehicleDetailPage } from './pages/VehicleDetailPage'
 
 export default function App() {
@@ -20,6 +21,7 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/cadastro" element={<RegisterPage />} />
         <Route path="/privacidade" element={<PrivacyPolicyPage />} />
+        <Route path="/termos" element={<TermsOfUsePage />} />
         <Route path="/meus-veiculos" element={<MyVehiclesPage />} />
       </Route>
     </Routes>
