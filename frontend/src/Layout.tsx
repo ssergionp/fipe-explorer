@@ -1,6 +1,9 @@
+import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from './auth/AuthContext'
+import { hasSeenOnboarding, markOnboardingSeen } from './auth/onboardingStorage'
 import { useCurrentUser } from './auth/useCurrentUser'
+import { OnboardingModal } from './components/OnboardingModal'
 
 function navLinkClass({ isActive }: { isActive: boolean }) {
   return `rounded-md px-3 py-2 text-sm font-medium ${
@@ -12,6 +15,12 @@ export function Layout() {
   const { isAuthenticated, logout } = useAuth()
   const currentUserQuery = useCurrentUser()
   const navigate = useNavigate()
+  const [showOnboarding, setShowOnboarding] = useState(() => !hasSeenOnboarding())
+
+  function dismissOnboarding() {
+    markOnboardingSeen()
+    setShowOnboarding(false)
+  }
 
   async function handleLogout() {
     await logout()
@@ -66,6 +75,8 @@ export function Layout() {
       <main className="mx-auto max-w-5xl px-4 py-6">
         <Outlet />
       </main>
+
+      {showOnboarding && <OnboardingModal onDismiss={dismissOnboarding} />}
     </div>
   )
 }
