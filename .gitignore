@@ -3,6 +3,7 @@ target/
 *.class
 dist/
 node_modules/
+dev-dist/
 
 # IDEs
 .idea/
